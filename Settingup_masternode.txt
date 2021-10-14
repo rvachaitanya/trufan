@@ -1,0 +1,15 @@
+Ansible Master Node Creation Steps:
+
+- Standup a Ubuntu AWS instance, I created it manually, and it can be automated using Terraform or any other IAC tools
+- Update Repoisitory:
+sudo apt-get update
+sudo apt-add-repository -y ppa:ansible/ansible
+sudo apt-get update
+- Install ansible
+sudo apt-get install -y ansible
+sudo apt install python-pip -y
+- Ansible will access AWS resources using Boto Framework
+sudo pip install boto boto3
+sudo apt-get install python-boto -y
+- Check for the installed Ansible
+ansible --version
