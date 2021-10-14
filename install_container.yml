@@ -1,0 +1,40 @@
+---
+#This calls the docker build file
+#this is to create the hello world pod and expose it as a service
+#k8s have been defined in the Docker folder
+- name: Create pod and expose service
+  hosts: final_server
+  become: true
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: "install openshift"
+      shell: pip install openshift
+      become_user: root
+    - name: "Ansible Create directory if not exists"
+      file:
+        path: /root/app
+        state: directory
+        mode: 0755
+        group: root
+        owner: root
+    - name: Ansible copy file to remote server
+      copy:
+        src: Docker
+        dest: /root/app
+    - name: docker from shell
+      shell: docker build -t hello_world_chaitanyarva:latest .
+      args:
+        chdir: /root/app/Docker
+    - name: Deploy the pod
+      shell: kubectl apply -f k8-pod.yml
+      args:
+        chdir: /root/app/Docker
+    - name: expose service
+      become_user: root
+      shell: kubectl expose deployment hello-world --type=LoadBalancer --name=my-service
+      args:
+        chdir: /root/app/Docker
+    - name: activate minikube url
+      become_user: root
+      shell: minikube service my-service

@@ -1,0 +1,47 @@
+---
+#This yml file installs docker and related binaries,
+#it also starts the minikube
+- name: docker installation
+  hosts: final_server
+  become: true
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: "Ping test"
+      ping:
+    - name: Install aptitude using apt
+      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+    - name: Install required system packages
+      apt: name={{ item }} state=latest update_cache=yes
+      loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools','conntrack']
+    - name: Add Docker GPG apt Key
+      apt_key:
+       url: https://download.docker.com/linux/ubuntu/gpg
+       state: present
+    - name: Add Docker Repository
+      apt_repository:
+       repo: deb https://download.docker.com/linux/ubuntu bionic stable
+       state: present
+    - name: Update apt and install docker-ce
+      apt: update_cache=yes name=docker-ce state=latest
+    - name: Install Docker Module for Python
+      pip:
+       name: docker
+    - name: Echo my_env_var
+      shell: "echo $MY_ENV_VARIABLE"
+      environment:
+         MINIKUBE_WANTUPDATENOTIFICATION: false
+         MINIKUBE_WANTREPORTERRORPROMPT: false
+         MINIKUBE_HOME: $HOME
+         CHANGE_MINIKUBE_NONE_USER: true
+         KUBECONFIG: $HOME/.kube/config
+    - name: Run the comman
+      command: minikube start --vm-driver none
+    - name: Change the ownership
+      file:
+        path: "{{ item }}"
+        owner: "{{ ansible_effective_user_id }}"
+        group: "{{ ansible_effective_group_id }}"
+      loop:
+        - $HOME/.kube
+        - $HOME/.minikube

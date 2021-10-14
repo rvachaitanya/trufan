@@ -1,0 +1,26 @@
+---
+#This yml file installs minikube and kubectl
+- name: Install minikube and kubectl
+  hosts: final_server
+  become: true
+  become_method: sudo
+  become_user: root
+  vars_files:
+    - defaults/main.yml
+  tasks:
+    - name: Set arch
+      set_fact:
+        translated_architecture: amd64
+      when: ansible_architecture == 'x86_64'
+    - name: get binaries
+      get_url: url="{{ item.url }}" dest="{{ item.dest }}"
+      with_items:
+        - url: https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-{{ ansible_system|lower }}-amd64
+          dest: "{{ minikube_install_dir }}/minikube"
+        - url: "https://storage.googleapis.com/kubernetes-release/release/{{ kubectl_version }}/bin/{{ ansible_system|lower }}/{{ translated_architecture }}/kubectl"
+          dest: "{{ minikube_install_dir }}/kubectl"
+    - name: chmod binaries
+      file: dest="{{ minikube_install_dir }}/{{ item }}" mode=0755
+      with_items:
+        - minikube
+        - kubectl
